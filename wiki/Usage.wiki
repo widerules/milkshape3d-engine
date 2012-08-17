@@ -1,14 +1,11 @@
-#summary One-sentence summary of this page.
 #labels Featured
-
-= Introduction =
+= Milkshape 3d for Android =
 
 Add your content here.
 
+= Usage =
+1. how to use.
 
-= Details =
+2. to do list.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+3. bugs.
