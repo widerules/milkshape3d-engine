@@ -7,12 +7,17 @@ import java.io.ByteArrayInputStream;
 import java.lang.String;
 import java.lang.Object;
 import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
 import android.content.Context;
 import java.io.BufferedReader;
 
+import android.opengl.GLU;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+
+
 
 public class MS3D{
 	private Context			context;
@@ -21,19 +26,20 @@ public class MS3D{
 
 	private Javatypes		jt;
 
-	private short           	num_materials;
-
 	public String			ID; // our MS3D header
 	public int			version;
 	public short			num_vertex;
 	public short			num_triangles;
 	public short			num_meshes;
+	public short			num_materials;
 
 	private Triad			tri;
 
 	private VERTEX			Vertices[];
 	private TRIANGLE		Triangles[];
 	private MESH			Meshes[];
+	public  MATERIAL		Materials[];	
+	private TEXTURE			Textures[];
 
 
 	public MS3D(Context context){
@@ -43,6 +49,7 @@ public class MS3D{
 		num_vertex	= 0;
 		num_triangles	= 0;
 		num_meshes	= 0;
+		num_materials	= 0;
 
 		tri		= new Triad();
 	} 
@@ -90,7 +97,7 @@ public class MS3D{
 			byte   Vertexs[] = new byte[4];
 			float  aa[]      = new float[3]; 
 
-			char   Flag      = (char)Is.read();
+			Vertices[i].Flag      = (char)Is.read();
 
 			Is.read(Vertexs);
 			aa[0] = jt.toFloat(Vertexs);
@@ -101,10 +108,10 @@ public class MS3D{
 			Is.read(Vertexs);
 			aa[2] = jt.toFloat(Vertexs);
 
-			char BoneId   = (char)Is.read();
-			char RefCount = (char)Is.read();
+			Vertices[i].Vertex = aa;
 
-			Vertices[i].Setup(Flag, aa, BoneId, RefCount);
+			Vertices[i].BoneId   = (char)Is.read();
+			Vertices[i].RefCount = (char)Is.read();
 		}
 	}
 
@@ -151,28 +158,17 @@ public class MS3D{
 
 			// read vertexNormals
 			float VertexNormals[][] = new float[3][3];
-			VertexNormals[0][0] = jt.toFloat( VertexsNrmx[0], VertexsNrmx[1], VertexsNrmx[2],  VertexsNrmx[3]);
-			VertexNormals[0][1] = jt.toFloat( VertexsNrmx[4], VertexsNrmx[5], VertexsNrmx[6],  VertexsNrmx[7]);
-			VertexNormals[0][2] = jt.toFloat( VertexsNrmx[8], VertexsNrmx[9], VertexsNrmx[10], VertexsNrmx[11]);
+			VertexNormals[0]    = jt.toFloatArray( VertexsNrmx, 3);
+			VertexNormals[1]    = jt.toFloatArray( VertexsNrmy, 3);
+			VertexNormals[2]    = jt.toFloatArray( VertexsNrmz, 3);
 
-			VertexNormals[1][0] = jt.toFloat( VertexsNrmy[0], VertexsNrmy[1], VertexsNrmy[2],  VertexsNrmy[3]);
-			VertexNormals[1][1] = jt.toFloat( VertexsNrmy[4], VertexsNrmy[5], VertexsNrmy[6],  VertexsNrmy[7]);
-			VertexNormals[1][2] = jt.toFloat( VertexsNrmy[8], VertexsNrmy[9], VertexsNrmy[10], VertexsNrmy[11]);
-
-			VertexNormals[2][0] = jt.toFloat( VertexsNrmz[0], VertexsNrmz[1], VertexsNrmz[2],  VertexsNrmz[3]);
-			VertexNormals[2][1] = jt.toFloat( VertexsNrmz[4], VertexsNrmz[5], VertexsNrmz[6],  VertexsNrmz[7]);
-			VertexNormals[2][2] = jt.toFloat( VertexsNrmz[8], VertexsNrmz[9], VertexsNrmz[10], VertexsNrmz[11]);
 
 			// read S/T
 			float Sx[] = new float[3];
-			Sx[0] = jt.toFloat( S[0], S[1], S[2],  S[3]);
-			Sx[1] = jt.toFloat( S[4], S[5], S[6],  S[7]);
-			Sx[2] = jt.toFloat( S[8], S[9], S[10], S[11]);
+			Sx = jt.toFloatArray( S, 3);
 
 			float Tx[] = new float[3];
-			Tx[0] = jt.toFloat( T[0], T[1], T[2],  T[3]);
-			Tx[1] = jt.toFloat( T[4], T[5], T[6],  T[7]);
-			Tx[2] = jt.toFloat( T[8], T[9], T[10], T[11]);
+			Tx = jt.toFloatArray( T, 3);
 
 			char SmoothingGroup   = (char)Is.read();
 			char GroupIndex       = (char)Is.read();
@@ -222,11 +218,101 @@ public class MS3D{
 	}
 
 
+	public void LoadMaterials() throws IOException{
+		byte matBuf[]	= new byte[2];
+
+		Is.read(matBuf);
+
+		num_materials	= jt.toShort( matBuf);
+		Materials	= new MATERIAL[num_materials];
+		Textures	= new TEXTURE[num_materials];
+
+		for(int i = 0; i < num_materials; i++){
+			String	mName;
+			byte	ffbit[]		= new byte[4];			
+			byte	xxbit[]		= new byte[16];
+			byte	nxbit[]		= new byte[32];
+			byte	XLbit[]		= new byte[128];
+			
+			Materials[i]		= new MATERIAL();
+			Textures[i]		= new TEXTURE();
+
+			Is.read(nxbit);
+			Materials[i].Name = new String(nxbit);	
+
+			Is.read(xxbit);
+			Materials[i].Ambient		= jt.toFloatArray( xxbit, 4);
+		
+			Is.read(xxbit);
+			Materials[i].Diffuse		= jt.toFloatArray( xxbit, 4);
+	
+			Is.read(xxbit);
+			Materials[i].Specular		= jt.toFloatArray( xxbit, 4);
+
+			Is.read(xxbit);
+			Materials[i].Emissive		= jt.toFloatArray( xxbit, 4);
+
+			Is.read(ffbit);
+			Materials[i].Transparency	= jt.toFloat(ffbit);			
+	
+			Is.read(ffbit);
+			Materials[i].Shininess		= jt.toFloat(ffbit);
+
+			Materials[i].Mode		= (char)Is.read();
+
+			Is.read(XLbit);
+			Materials[i].Texture		= new String(XLbit);
+
+			Is.read(XLbit);
+			Materials[i].AlphaMap		= new String(XLbit);
+		}	
+	}	
+	
+
+	public void LoadImg(int index, GL10 gl){
+		System.out.println(">>>> Load Image <<<<");
+
+		StringTokenizer Str = new StringTokenizer(Materials[index].Texture, ".");
+
+		String x   = new Integer(Str.countTokens()).toString();
+		System.out.println("Tokens Count: " +x);
+	
+		String Path = "R.drawable.";
+//		String res  = Path.concat(Str.nextToken());
+		String Name = Str.nextToken();
+		System.out.println(Name);
+
+		String Package = context.getPackageName();
+		System.out.println(Package);
+
+		int ID = context.getResources().getIdentifier( Name, "drawable", Package);
+		x   = new Integer(ID).toString();
+
+		System.out.println("Resource ID:");
+		System.out.println(x);
+		Textures[index].loadGLTexture(gl, ID, context);
+
+	}
 
 
+	public void RenderMaterials(GL10 gl, int Index){
+
+			if(num_materials > 0){
+				gl.glEnable(GL10.GL_TEXTURE_2D);
+				gl.glBindTexture(GL10.GL_TEXTURE_2D, Textures[Index].textures[0]);
+			}
+
+			gl.glMaterialfv(GL10.GL_FRONT, GL10.GL_AMBIENT,  Materials[Index].Ambient, 0);
+			gl.glMaterialfv(GL10.GL_FRONT, GL10.GL_DIFFUSE,  Materials[Index].Diffuse, 0);
+			gl.glMaterialfv(GL10.GL_FRONT, GL10.GL_SPECULAR, Materials[Index].Specular, 0);
+			gl.glMaterialfv(GL10.GL_FRONT, GL10.GL_EMISSION, Materials[Index].Emissive, 0);
+			gl.glMaterialf (GL10.GL_FRONT, GL10.GL_SHININESS,Materials[Index].Shininess);
+
+	}
 
 	public void Draw(GL10 gl){
 		for(int m = 0; m < num_meshes; m++){
+			RenderMaterials(gl, m);
 			for(int t = 0; t < Meshes[m].NumTriangles; t++){
 
 				short triIndices = Meshes[m].TrianglesIndices[t];
@@ -236,9 +322,13 @@ public class MS3D{
 				short I3 = Triangles[triIndices].VertexIndices[2]; 
 
 
+				tri.SetTexCoord( gl, Triangles[triIndices].S, Triangles[triIndices].T);
 				tri.SetNormals(gl, Triangles[triIndices].VertexNormals);
 				tri.Draw(gl,  Vertices[I1].Vertex[0], Vertices[I1].Vertex[1], Vertices[I1].Vertex[2], 						      Vertices[I2].Vertex[0], Vertices[I2].Vertex[1], Vertices[I2].Vertex[2], 						      Vertices[I3].Vertex[0], Vertices[I3].Vertex[1], Vertices[I3].Vertex[2]);
 			}	
+			if(num_materials > 0){
+				gl.glDisable(GL10.GL_TEXTURE_2D);
+			}
 		}
 	}
 

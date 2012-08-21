@@ -13,10 +13,24 @@ public class MATERIAL{
 	public String	Texture;		// 128
 	public String	AlphaMap;		// 128
 
-	public MATERIAL{
+	public MATERIAL(){
 		Ambient		= new float[4];
 		Diffuse		= new float[4];
 		Specular	= new float[4];
 		Emissive	= new float[4];
+	}
+
+	public void Setup(String Name, float [] Ambient, float [] Diffuse, float [] Specular, float [] Emissive,
+			  float Transparency, float Shininess, char Mode, String Texture, String AlphaMap){
+		this.Name		= Name;
+		this.Ambient		= Ambient;
+		this.Diffuse		= Diffuse;
+		this.Specular		= Specular;
+		this.Emissive		= Emissive;
+		this.Transparency	= Transparency;
+		this.Shininess		= Shininess;
+		this.Mode		= Mode;
+		this.Texture		= Texture;
+		this.AlphaMap		= AlphaMap;
 	}
 };

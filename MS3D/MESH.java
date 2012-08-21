@@ -9,7 +9,7 @@ public class MESH{
 	String             Name;
 	public short       NumTriangles;
 	public short    [] TrianglesIndices;
-	private char       MaterialIndex;
+	public char	   MaterialIndex;
 	public float       Triangles[];
 	private ByteBuffer indexBuffer;
 	public byte        indices[];

@@ -1,6 +1,10 @@
 package com.project.ms3d;
 
 import java.io.ByteArrayInputStream;
+import java.util.StringTokenizer;
+
+
+
 
 public class Javatypes{
 
@@ -33,6 +37,21 @@ public class Javatypes{
 		}
 
 		return Float.intBitsToFloat(accum);
+	}
+
+
+	public static float[] toFloatArray(byte [] byteArray, int offset){
+
+		float Result[] = new float[offset];
+		int incr = 0;
+		
+		for(int i = 0; i < offset; i++){
+			
+			Result[i] = toFloat(  byteArray[0+incr],  byteArray[1+incr],  byteArray[2+incr],   byteArray[3+incr]);
+			incr += 4;
+		}
+
+		return Result;
 	}
 
 
@@ -75,4 +94,6 @@ public class Javatypes{
 	    }
 	    return value;
 	}
+
+
 }
