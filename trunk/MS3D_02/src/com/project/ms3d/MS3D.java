@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+
 import java.lang.String;
 import java.lang.Object;
-import java.io.InputStreamReader;
+import java.lang.Byte;
 import java.util.StringTokenizer;
 
 import android.content.Context;
-import java.io.BufferedReader;
+
 
 import android.opengl.GLU;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -20,6 +23,18 @@ import javax.microedition.khronos.opengles.GL10;
 
 
 public class MS3D{
+/* 
+	verander alle Public variable to private wanneer je klaar ben met
+	testen
+*/
+	private byte[]			SHByte	= new byte[2];
+	private byte[]			FLByte	= new byte[4];
+	private byte[]			SXByte	= new byte[6];
+	private byte[]			TWByte	= new byte[12];
+	private byte[]			TSByte	= new byte[16];
+	private byte[]			NXByte	= new byte[32];
+	private byte[]			XLByte	= new byte[128];
+
 	private Context			context;
 	private boolean			bActive;
 	private InputStream		Is;
@@ -32,6 +47,12 @@ public class MS3D{
 	public short			num_triangles;
 	public short			num_meshes;
 	public short			num_materials;
+	public short			num_joints;
+
+	public float			AnimationFPS;
+	public float			CurrentTime;
+	public int			TotalFrames;
+	public short			Numb;
 
 	private Triad			tri;
 
@@ -40,6 +61,7 @@ public class MS3D{
 	private MESH			Meshes[];
 	public  MATERIAL		Materials[];	
 	private TEXTURE			Textures[];
+	private JOINT			Joints[];
 
 
 	public MS3D(Context context){
@@ -78,35 +100,36 @@ public class MS3D{
 		ID = new String(header);
 
 		// read MS3D Version
-		byte versionBuf[] = new byte[4];
-		Is.read(versionBuf);
-		version = jt.toInt( versionBuf);
+		Is.read(FLByte);
+		version = jt.toInt( FLByte);
 	}
 
 
 	public void LoadVertex() throws IOException{
-		byte vertexBuf[] = new byte[2];
 
-		Is.read(vertexBuf);
-		num_vertex = jt.toShort( vertexBuf);
+		Is.read(SHByte);
+		num_vertex = jt.toShort( SHByte);
 
 		Vertices = new VERTEX[num_vertex];
 
 		for(int i = 0; i < num_vertex; i++){
 			Vertices[i]      = new VERTEX();
-			byte   Vertexs[] = new byte[4];
 			float  aa[]      = new float[3]; 
 
 			Vertices[i].Flag      = (char)Is.read();
 
-			Is.read(Vertexs);
-			aa[0] = jt.toFloat(Vertexs);
+/*
+	probeer dit ook in een groep van te maken.
+*/
 
-			Is.read(Vertexs);
-			aa[1] = jt.toFloat(Vertexs);
+			Is.read(FLByte);
+			aa[0] = jt.toFloat(FLByte);
 
-			Is.read(Vertexs);
-			aa[2] = jt.toFloat(Vertexs);
+			Is.read(FLByte);
+			aa[1] = jt.toFloat(FLByte);
+
+			Is.read(FLByte);
+			aa[2] = jt.toFloat(FLByte);
 
 			Vertices[i].Vertex = aa;
 
@@ -117,57 +140,46 @@ public class MS3D{
 
 
 	public void LoadTriangles() throws IOException{
-		byte triBuf[] = new byte[2];
 
-		Is.read(triBuf);
-		num_triangles = jt.toShort( triBuf);
+		Is.read(SHByte);
+		num_triangles = jt.toShort( SHByte);
 
 		Triangles = new TRIANGLE[num_triangles];
 
 		for(int i = 0; i < num_triangles; i++){
 			Triangles[i] = new TRIANGLE();
 
-			byte VertexsFlg[]   = new byte[2];
-			byte VertexsInd[]   = new byte[6];
-
-			byte VertexsNrmx[]  = new byte[12];
-			byte VertexsNrmy[]  = new byte[12];
-			byte VertexsNrmz[]  = new byte[12];
-
-			byte S[]            = new byte[12];
-			byte T[]            = new byte[12];
-
-			Is.read(VertexsFlg);
-			Is.read(VertexsInd);
-
-			Is.read(VertexsNrmx);
-			Is.read(VertexsNrmy);
-			Is.read(VertexsNrmz);
-
-			Is.read(S);
-			Is.read(T);
-
-			// read Flag
-			short Flag = jt.toShort(VertexsFlg);
+			Is.read(SHByte);
 
 			// read Indices
+			Is.read(SXByte);
 			short Ind[] = new short[3];
-			Ind[0] = jt.toShort(VertexsInd[0], VertexsInd[1]);
-			Ind[1] = jt.toShort(VertexsInd[2], VertexsInd[3]);
-			Ind[2] = jt.toShort(VertexsInd[4], VertexsInd[5]);
+			Ind[0] = jt.toShort(SXByte[0], SXByte[1]);
+			Ind[1] = jt.toShort(SXByte[2], SXByte[3]);
+			Ind[2] = jt.toShort(SXByte[4], SXByte[5]);
+
 
 			// read vertexNormals
 			float VertexNormals[][] = new float[3][3];
-			VertexNormals[0]    = jt.toFloatArray( VertexsNrmx, 3);
-			VertexNormals[1]    = jt.toFloatArray( VertexsNrmy, 3);
-			VertexNormals[2]    = jt.toFloatArray( VertexsNrmz, 3);
+			Is.read(TWByte);
+			VertexNormals[0]    = jt.toFloatArray( TWByte, 3);
+			Is.read(TWByte);
+			VertexNormals[1]    = jt.toFloatArray( TWByte, 3);
+			Is.read(TWByte);
+			VertexNormals[2]    = jt.toFloatArray( TWByte, 3);
 
+			// read Flag
+			short Flag = jt.toShort(SHByte);
+
+
+			Is.read(TWByte);
 			// read S/T
 			float Sx[] = new float[3];
-			Sx = jt.toFloatArray( S, 3);
+			Sx = jt.toFloatArray( TWByte, 3);
 
+			Is.read(TWByte);
 			float Tx[] = new float[3];
-			Tx = jt.toFloatArray( T, 3);
+			Tx = jt.toFloatArray( TWByte, 3);
 
 			char SmoothingGroup   = (char)Is.read();
 			char GroupIndex       = (char)Is.read();
@@ -177,30 +189,28 @@ public class MS3D{
 	}
 
 
-	public void LoadMeshes() throws IOException{
-		byte meshBuf[] = new byte[2];
 
-		Is.read(meshBuf);
-		num_meshes = jt.toShort( meshBuf);
+	public void LoadMeshes() throws IOException{
+
+		Is.read(SHByte);
+		num_meshes = jt.toShort( SHByte);
 		Meshes = new MESH[num_meshes];
 
 		for(int i = 0; i < num_meshes; i++){
 			Meshes[i] = new MESH();
 			String MeshName;
-			byte   Name[]     = new byte[32];
-			byte   NumTri[]   = new byte[2];
+
 			byte   TriInd[];
 
 			char Flag = (char)Is.read(); 
 
 			// read Mesh name
-			Is.read(Name);
-			MeshName = new String(Name);
+			Is.read(NXByte);
+			MeshName = new String(NXByte);
 
 			// read numbers of triangle 
-			Is.read(NumTri);
-
-			short Num_Tri = jt.toShort(NumTri);
+			Is.read(SHByte);
+			short Num_Tri = jt.toShort(SHByte);
 
 			TriInd = new byte[Num_Tri * 2];
 			Is.read(TriInd);
@@ -220,55 +230,74 @@ public class MS3D{
 
 
 	public void LoadMaterials() throws IOException{
-		byte matBuf[]	= new byte[2];
 
-		Is.read(matBuf);
+		Is.read(SHByte);
 
-		num_materials	= jt.toShort( matBuf);
+		num_materials	= jt.toShort( SHByte);
 		Materials	= new MATERIAL[num_materials];
 		Textures	= new TEXTURE[num_materials];
 
 		for(int i = 0; i < num_materials; i++){
-			String	mName;
-			byte	ffbit[]		= new byte[4];			
-			byte	xxbit[]		= new byte[16];
-			byte	nxbit[]		= new byte[32];
-			byte	XLbit[]		= new byte[128];
-			
+			String	mName;			
 			Materials[i]		= new MATERIAL();
 			Textures[i]		= new TEXTURE();
 
-			Is.read(nxbit);
-			Materials[i].Name = new String(nxbit);	
+			Is.read(NXByte);
+			Materials[i].Name = new String(NXByte);	
 
-			Is.read(xxbit);
-			Materials[i].Ambient		= jt.toFloatArray( xxbit, 4);
+			Is.read(TSByte);
+			Materials[i].Ambient		= jt.toFloatArray( TSByte, 4);
 		
-			Is.read(xxbit);
-			Materials[i].Diffuse		= jt.toFloatArray( xxbit, 4);
+			Is.read(TSByte);
+			Materials[i].Diffuse		= jt.toFloatArray( TSByte, 4);
 	
-			Is.read(xxbit);
-			Materials[i].Specular		= jt.toFloatArray( xxbit, 4);
+			Is.read(TSByte);
+			Materials[i].Specular		= jt.toFloatArray( TSByte, 4);
 
-			Is.read(xxbit);
-			Materials[i].Emissive		= jt.toFloatArray( xxbit, 4);
+			Is.read(TSByte);
+			Materials[i].Emissive		= jt.toFloatArray( TSByte, 4);
 
-			Is.read(ffbit);
-			Materials[i].Transparency	= jt.toFloat(ffbit);			
+			Is.read(FLByte);
+			Materials[i].Transparency	= jt.toFloat(FLByte);			
 	
-			Is.read(ffbit);
-			Materials[i].Shininess		= jt.toFloat(ffbit);
+			Is.read(FLByte);
+			Materials[i].Shininess		= jt.toFloat(FLByte);
 
 			Materials[i].Mode		= (char)Is.read();
 
-			Is.read(XLbit);
-			Materials[i].Texture		= new String(XLbit);
+			Is.read(XLByte);
+			Materials[i].Texture		= new String(XLByte);
 
-			Is.read(XLbit);
-			Materials[i].AlphaMap		= new String(XLbit);
+			Is.read(XLByte);
+			Materials[i].AlphaMap		= new String(XLByte);
 		}	
 	}	
 	
+/*
+	probeer van alle byte buff tot een enkel global buffs te maken.
+	anders hoef je het niet steeds weer voor elke functie te roepen
+
+-939524096
+-939524096
+
+*/
+	public void LoadJoint() throws IOException{
+
+		Is.read(FLByte);		// Animation FPS
+		AnimationFPS		= jt.toFloat( FLByte);
+
+		Is.read(FLByte);		// Current Time
+		CurrentTime		= jt.toFloat( FLByte);
+
+		Is.read(FLByte);		// Total Frames
+		TotalFrames		= jt.toInt( FLByte);
+
+		Is.read(SHByte);	// num Joints
+		num_joints		= jt.toShort( SHByte);
+
+
+	}
+
 
 	public void LoadImg(int index, GL10 gl){
 		System.out.println(">>>> Load Image <<<<");
@@ -276,9 +305,9 @@ public class MS3D{
 		StringTokenizer Str = new StringTokenizer(Materials[index].Texture, ".");
 
 		String x   = new Integer(Str.countTokens()).toString();
-		System.out.println("Tokens Count: " +x);
+//		System.out.println("Tokens Count: " +x);
 	
-		String Path = "R.drawable.";
+//		String Path = "R.drawable.";
 //		String res  = Path.concat(Str.nextToken());
 		String Name = Str.nextToken();
 		System.out.println(Name);
@@ -311,6 +340,7 @@ public class MS3D{
 
 	}
 
+
 	public void Draw(GL10 gl){
 		for(int m = 0; m < num_meshes; m++){
 			RenderMaterials(gl, (int)Meshes[m].MaterialIndex);
@@ -321,7 +351,6 @@ public class MS3D{
 				short I1 = Triangles[triIndices].VertexIndices[0]; 
 				short I2 = Triangles[triIndices].VertexIndices[1]; 
 				short I3 = Triangles[triIndices].VertexIndices[2]; 
-
 
 				tri.SetTexCoord( gl, Triangles[triIndices].S, Triangles[triIndices].T);
 				tri.SetNormals(gl, Triangles[triIndices].VertexNormals);
