@@ -94,7 +94,7 @@ public class Core extends GLSurfaceView implements Renderer{
 
 		gl.glPushMatrix();
 //		gl.glScalef( 0.25f, 0.25f, 0.25f);
-		gl.glTranslatef(0.0f, -28.5f, 160.0f);		//Move up 2.5 Units
+		gl.glTranslatef(0.0f, -8.5f, 10.0f);		//Move up 2.5 Units
 		gl.glRotatef( r, 0, 1, 0);
 
 
@@ -118,7 +118,7 @@ public class Core extends GLSurfaceView implements Renderer{
 
 		
 
-		r += 0.175f;
+		r += 0.35f;
 
 	}
 
@@ -128,7 +128,7 @@ public class Core extends GLSurfaceView implements Renderer{
 			Log.d( ">>> Log:	 1", "Open Zombie File");
 //			milk.Load( R.drawable.dwarf1);
 			milk.Load( R.drawable.model);
-//			milk.Load( R.drawable.zombie);
+			milk.Load( R.drawable.zombie);
 		}
 		catch(IOException e){ Log.d( "Log: Error", "error opening file?"); }		
 
@@ -146,7 +146,16 @@ public class Core extends GLSurfaceView implements Renderer{
 				     Log.d( "Log:	 6", " Numbers of Meshes:"+milk.num_meshes);
 			milk.LoadMaterials();
 				     Log.d( "Log:	 7", " Numbers of Materials:"+milk.num_materials);
+			milk.LoadJoint();
+				     Log.d( "Log:	 8", " Numbers of Joints:"+milk.num_joints);
+				     Log.d( "Log:	 9", " Total Frames:"	  +milk.TotalFrames);
+				     Log.d( "Log:	10", " Total Frames:"	  +milk.Numb);
 
+					if( milk.TotalFrames == milk.Numb){
+					     Log.d( "Log:	11", " Equal");
+					}else{
+					     Log.d( "Log:	11", " Bad luck");
+					}
 //				for(int i = 0; i < milk.num_materials; i++){
 //				     Log.d( "Log:	 X", " Materials Path:"+milk.Materials[i].Name);
 //				     Log.d( "Path	 X", " Materials Path:"+milk.Materials[i].Texture);
