@@ -70,11 +70,10 @@ public class Javatypes{
 		return(short)( high << 8 | low );
 	}
 
-
 	public static int toInt(byte [] bytes){
-		return (bytes[0] << 24) | ((bytes[1] & 0xff) << 16) | ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff); 
+		//return (bytes[0] << 24) | ((bytes[1] & 0xff) << 16) | ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff); 
+		return( java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt());
 	}
-
 
 	public static byte[] intToByteArray(int a){
 		byte[] ret = new byte[4];
@@ -86,7 +85,6 @@ public class Javatypes{
 		return ret;
 	}
 
-
 	public static int byteArrayToInt(byte[] b) {
 	    int value = 0;
 	    for (int i = 0; i < 4; i++) {
@@ -95,5 +93,14 @@ public class Javatypes{
 	    return value;
 	}
 
+/*
+	public static int byteArrayToInt(byte[] b) {
+	    int value = 0;
+	    for (int i = 0; i < 4; i++) {
+		value = (value << 8) | (b[i] & 0xFF);
+	    }
+	    return value;
+	}
+*/
 
 }
