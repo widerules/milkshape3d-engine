@@ -1,5 +1,6 @@
 package com.project.ms3d;
 
+import java.lang.Math;
 
 public class TRIANGLE{
 	public  short   VertexIndices[];
@@ -17,6 +18,7 @@ public class TRIANGLE{
 		S             = new float[3];
 		T             = new float[3];
 	}
+
 
 	public void Setup(short Flag, short [] VertexIndices, float [][] VertexNormals, float [] S, float [] T, 
 		          char SmoothingGroup, char GroupIndex){
