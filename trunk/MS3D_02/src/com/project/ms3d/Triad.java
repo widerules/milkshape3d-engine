@@ -81,10 +81,8 @@ public class Triad {
 
 
 
-
-
 	public void SetNormals(GL10 gl, float vNormals[][]){
-		float s = 0.75f;
+		float s = 1.0f;
 
 		vertices[0] = vNormals[0][0] * s;
 		vertices[1] = vNormals[0][1] * s;
